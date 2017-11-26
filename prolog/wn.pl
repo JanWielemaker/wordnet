@@ -1,3 +1,35 @@
+/*  Author:        Jan Wielemaker
+    E-mail:        J.Wielemaker@vu.nl
+    WWW:           http://www.swi-prolog.org
+    Copyright (c)  2017, VU University Amsterdam
+    All rights reserved.
+
+    Redistribution and use in source and binary forms, with or without
+    modification, are permitted provided that the following conditions
+    are met:
+
+    1. Redistributions of source code must retain the above copyright
+       notice, this list of conditions and the following disclaimer.
+
+    2. Redistributions in binary form must reproduce the above copyright
+       notice, this list of conditions and the following disclaimer in
+       the documentation and/or other materials provided with the
+       distribution.
+
+    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+    FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+    INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+    BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+    LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+    CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN
+    ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+    POSSIBILITY OF SUCH DAMAGE.
+*/
+
 :- module(wordnet,
 	  [ wn_s/6,			% basic Wordnet relations
 	    wn_g/2,
@@ -21,6 +53,9 @@
 	    wn_per/4,
 	    wn_fr/3,
 
+	    wn_cat/3,			% +SynSet, -SyntacticCategory, -Offset
+	    ss_type/2,			% +Code, -Type
+
 	    load_wordnet/0		% force loading everything
 	  ]).
 
@@ -39,32 +74,32 @@ This library defines a portray/1 rule to explain synset ids.
 
 Some more remarks:
 
-	* SynSet identifiers are large numbers.  Such numbers require
-	  significant more space on the stacks but not in clauses and
-	  therefore it is not considered worthwhile to strip the
-	  type info represented in the most significant digit.
+ - SynSet identifiers are large numbers. Such numbers require
+   significant more space on the stacks but not in clauses and
+   therefore it is not considered worthwhile to strip the
+   type info represented in the most significant digit.
 
-	* On wordnet 2.0, the syntactic category deduced from the
-	  synset id is consistent with the 4th argument of s/6, though
-	  both adjective and adjective_satellite are represented as
-	  3XXXXXXXX
+ - On wordnet 2.0, the syntactic category deduced from the
+   synset id is consistent with the 4th argument of s/6, though
+   both adjective and adjective_satellite are represented as
+   3XXXXXXXX
 
-### About Wordnet
-
-Wordnet  is  a  lexical  database   for    the   English  language.  See
+@author Originally by Jan Wielemaker.  Partly documented by an
+unknown author.
+@see Wordnet is a lexical database for the English language. See
 http://www.cogsci.princeton.edu/~wn/
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 */
 
 
 		 /*******************************
-		 *          FIND WORDNET 	*
+		 *          FIND WORDNET	*
 		 *******************************/
 
 :- multifile user:file_search_path/2.
 
 user:file_search_path(wordnet, WNHOME) :-
-	(   getenv('WNHOME', WNHOME)	->  true
+	(   getenv('WNHOME', WNHOME)
+	->  true
 	;   current_prolog_flag(windows, true)
 	->  WNHOME = 'C:\\Program Files\\WordNet\\2.0'
 	;   WNHOME = '/usr/local/WordNet-3.0'
@@ -102,78 +137,112 @@ wn_op(vgp(synset_id, w_num, synset_id, w_num)).
 		 *    WORDNET BASIC RELATIONS   *
 		 *******************************/
 
-%! wn_ant(Antonym1, Wnum1, Antonym2, WNum2) is nondet.
-%  Antonyms: synsets with opposite meanings.
+%!  wn_ant(?Antonym1, ?Wnum1, ?Antonym2, ?WNum2) is nondet.
+%
+%   Antonyms: synsets with opposite meanings.
+
 wn_ant(Antonym1, Wnum1, Antonym2, WNum2) :- ant(Antonym1, Wnum1, Antonym2, WNum2).
 
-%! wn_at(Noun, Adjective) is nondet.
-%  Attribute relation: adjective pertains to concept represented by noun.
+%!  wn_at(?Noun, ?Adjective) is nondet.
+%
+%   Attribute relation: adjective pertains  to   concept  represented by
+%   noun.
+
 wn_at(Noun, Adjective) :- at(Noun, Adjective).
 
-%! wn_cls(SynSet, W1, Class, W2, ClassType) is nondet.
+%!  wn_cls(?Syn?Set, ?W1, ?Class, ?W2, ?ClassType) is nondet.
+
 wn_cls(SynSet, W1, Class, W2, ClassType) :- cls(SynSet, W1, Class, W2, ClassType).
 
-%! wn_cs(SynSet, Causes) is nondet.
-%  First kind of event is caused by second.
+%!  wn_cs(?SynSet, ?Causes) is nondet.
+%
+%   First kind of event is caused by second.
+
 wn_cs(SynSet, Causes) :- cs(SynSet, Causes).
 
-%! wn_der(SynSet1, W1, SynSet2, W2) is nondet.
+%!  wn_der(?SynSet1, ?W1, ?SynSet2, ?W2) is nondet.
+
 wn_der(SynSet1, W1, SynSet2, W2) :- der(SynSet1, W1, SynSet2, W2).
 
-%! wn_ent(SynSet, Entailment) is nondet.
-%  First kind of event entails occurrence of second.
+%!  wn_ent(?SynSet, ?Entailment) is nondet.
+%
+%   First kind of event entails occurrence of second.
+
 wn_ent(SynSet, Entailment) :- ent(SynSet, Entailment).
 
-%! wn_fr(Synset, Wnum, Fnum) is nondet.
+%!  wn_fr(?Synset, ?Wnum, ?Fnum) is nondet.
+
 wn_fr(Synset, Wnum, Fnum) :- fr(Synset, Wnum, Fnum).
 
-%! wn_g(SynSet, Gloss) is nondet.
+%!  wn_g(?SynSet, ?Gloss) is nondet.
+
 wn_g(SynSet, Gloss) :- g(SynSet, Gloss).
 
-%! wn_hyp(Hyponym, HyperNym) is nondet.
-%  Subclass-superclass relation between pairs of nouns or verbs
+%!  wn_hyp(?Hyponym, ?HyperNym) is nondet.
+%
+%   Subclass-superclass relation between pairs of nouns or verbs
+
 wn_hyp(Hyponym, HyperNym) :- hyp(Hyponym, HyperNym).
 
-%! wn_ins(A,B) is nondet.
+%!  wn_ins(?A,?B) is nondet.
+
 wn_ins(A,B) :- ins(A,B).
 
-%! wn_mm(SynSet, MemberMeronym) is nondet.
-%  First kind of object is a member of second
+%!  wn_mm(?SynSet, ?MemberMeronym) is nondet.
+%
+%   First kind of object is a member of second
+
 wn_mm(SynSet, MemberMeronym) :- mm(SynSet, MemberMeronym).
 
-%! wn_mp(SynSet, PartMeronym) is nondet.
-%  First kind of object is a part of second
+%!  wn_mp(?SynSet, ?PartMeronym) is nondet.
+%
+%   First kind of object is a part of second
+
 wn_mp(SynSet, PartMeronym) :- ms(SynSet, PartMeronym).
 
-%! wn_ms(SynSet, SubstanceMeronym) is nondet.
-%  First substance is part of second.
+%!  wn_ms(?SynSet, ?SubstanceMeronym) is nondet.
+%
+%   First substance is part of second.
+
 wn_ms(SynSet, SubstanceMeronym) :- ms(SynSet, SubstanceMeronym).
 
-%! wn_per(Synset1, WNum1, Synset2, WNum2) is nondet.
+%!  wn_per(?Synset1, ?WNum1, ?Synset2, ?WNum2) is nondet.
+
 wn_per(Synset1, WNum1, Synset2, WNum2) :- per(Synset1, WNum1, Synset2, WNum2).
 
-%! wn_ppl(Synset1, WNum1, Synset2, WNum2) is nondet.
-%  Relation between adjectival form and a verb.
+%!  wn_ppl(?Synset1, ?WNum1, ?Synset2, ?WNum2) is nondet.
+%
+%   Relation between adjectival form and a verb.
+
 wn_ppl(Synset1, WNum1, Synset2, WNum2) :- ppl(Synset1, WNum1, Synset2, WNum2).
 
-%! wn_s(SynSet, WNum, Word, SynSetType, Sense, Tag) is nondet.
+%!  wn_s(?SynSet, ?WNum, ?Word, ?SynSetType, ?Sense, ?Tag) is nondet.
+
 wn_s(SynSet, WNum, Word, SynSetType, Sense, Tag) :- s(SynSet, WNum, Word, SynSetType, Sense, Tag).
 
-%! wn_sa(Synset1, WNum1, Synset2, WNum2) is nondet.
-%  Relation between a single word verb its phrasal verb variant with a similar meanings.
+%!  wn_sa(?Synset1, ?WNum1, ?Synset2, ?WNum2) is nondet.
+%
+%   Relation between a single word verb its phrasal verb variant with a
+%   similar meanings.
+
 wn_sa(Synset1, WNum1, Synset2, WNum2) :- sa(Synset1, WNum1, Synset2, WNum2).
 
-%! wn_sim(SynSet, Similar) is nondet.
-%  Similar adjectives.
+%!  wn_sim(?SynSet, ?Similar) is nondet.
+%
+%   Similar adjectives.
+
 wn_sim(SynSet, Similar) :- sim(SynSet, Similar).
 
-%! wn_sk(A,B,C) is nondet.
+%!  wn_sk(?A,?B,?C) is nondet.
+
 wn_sk(A,B,C) :- sk(A,B,C).
 
-%! wn_syntax(A,B,C) is nondet.
+%!  wn_syntax(?A,?B,?C) is nondet.
+
 wn_syntax(A,B,C) :- syntax(A,B,C).
 
-%! wn_vgp(Verb, W1, Similar, W2) is nondet.
+%!  wn_vgp(?Verb, ?W1, ?Similar, ?W2) is nondet.
+
 wn_vgp(Verb, W1, Similar, W2) :- vgp(Verb, W1, Similar, W2).
 
 
@@ -181,7 +250,7 @@ wn_vgp(Verb, W1, Similar, W2) :- vgp(Verb, W1, Similar, W2).
 		 *	   CODE MAPPINGS	*
 		 *******************************/
 
-%!	wn_cat(+SunSet, -SyntacticCategory, -Offset) is det.
+%!	wn_cat(+SynSet, -SyntacticCategory, -Offset) is det.
 %
 %	Break the synset id into its   syntactic  category and offset as
 %	defined in the manpage prologdb.5
@@ -251,20 +320,4 @@ user:exception(undefined_predicate, wordnet:Name/Arity, retry) :-
 	functor(Op, Name, Arity),
 	wn_op(Op),
 	load_op(Name).
-
-
-		 /*******************************
-		 *	      PORTRAY		*
-		 *******************************/
-
-:- multifile user:portray/1.
-
-user:portray(SynSet) :-
-	integer(SynSet),
-	SynSet > 100000000,
-	SynSet < 500000000,
-	findall(Word, s(SynSet, _, Word, _, _, _), Words),
-	Words \== [], !,
-	concat_atom(Words, ', ', SS),
-	format('~w (wn: ~w)', [SynSet, SS]).
 
