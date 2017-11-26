@@ -97,14 +97,13 @@ http://www.cogsci.princeton.edu/~wn/
 
 :- multifile user:file_search_path/2.
 
-user:file_search_path(wordnet, WNHOME) :-
-	(   getenv('WNHOME', WNHOME)
+user:file_search_path(wndb, WNDB) :-
+	(   getenv('WNDB', WNDB)
 	->  true
 	;   current_prolog_flag(windows, true)
-	->  WNHOME = 'C:\\Program Files\\WordNet\\2.0'
-	;   WNHOME = '/usr/local/WordNet-3.0'
+	->  WNDB = 'C:\\Program Files\\WordNet\\2.0'
+	;   WNDB = '/usr/local/WordNet-3.0'
 	).
-user:file_search_path(prolog_wn, wordnet(prolog)).
 
 %!	wn_op(PredSpec) is nondet.
 %
@@ -292,7 +291,7 @@ load_wordnet :-
 
 load_op(Name) :-
 	atom_concat('wn_', Name, File),
-	absolute_file_name(prolog_wn(File),
+	absolute_file_name(wndb(File),
 			   [ access(read),
 			     file_type(prolog)
 			   ],
@@ -303,7 +302,7 @@ load_op(Name) :-
 	    time_file(QlfFile, QlfTime),
 	    time_file(PlFile, PlTime),
 	    QlfTime >= PlTime
-	->  load_files([QlfFile])
+	->  load_files(QlfFile)
 	;   access_file(QlfFile, write)
 	->  qcompile(PlFile)
 	;   load_files(PlFile)

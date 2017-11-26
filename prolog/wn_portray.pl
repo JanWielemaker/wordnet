@@ -33,6 +33,7 @@
 */
 
 :- module(wn_portray, []).
+:- use_module(wn).
 
 /** <module> Portray Wordnet synset numbers
 
@@ -47,7 +48,7 @@ user:portray(SynSet) :-
 	integer(SynSet),
 	SynSet > 100000000,
 	SynSet < 500000000,
-	findall(Word, s(SynSet, _, Word, _, _, _), Words),
+	findall(Word, wn_s(SynSet, _, Word, _, _, _), Words),
 	Words \== [], !,
 	atomics_to_string(Words, ', ', SS),
-	format('~w (wn: ~w)', [SynSet, SS]).
+	format('~w (WN: ~w)', [SynSet, SS]).
