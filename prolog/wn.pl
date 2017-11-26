@@ -99,12 +99,30 @@ http://www.cogsci.princeton.edu/~wn/
 :- multifile user:file_search_path/2.
 
 user:file_search_path(wndb, WNDB) :-
-    (   getenv('WNDB', WNDB)
+    (   haswndb
+    ->  true
+    ;   getenv('WNDB', WNDB)
     ->  true
     ;   current_prolog_flag(windows, true)
-    ->  WNDB = 'C:\\Program Files\\WordNet\\2.0'
+    ->  WNDB = 'C:\\Program Files\\WordNet\\3.0'
     ;   WNDB = '/usr/local/WordNet-3.0'
     ).
+
+haswndb :-
+    absolute_file_name(wndb(wn_s), _,
+                       [ file_type(prolog),
+                         access(read),
+                         file_errors(fail)
+                       ]).
+checkwndb :-
+    haswndb,
+    !.
+checkwndb :-
+    print_message(error, wordnet(nodb)).
+
+:- initialization
+    checkwndb.
+
 
 %!  wn_op(PredSpec) is nondet.
 %
@@ -402,3 +420,14 @@ user:exception(undefined_predicate, wordnet:Name/Arity, retry) :-
 	wn_op(Op),
 	load_op(Name).
 
+
+		 /*******************************
+		 *            MESSAGES		*
+		 *******************************/
+
+:- multifile prolog:message//1.
+
+prolog:message(wordnet(nodb)) -->
+    [ 'Cannot find WordNet data files.  Please set the environment'-[], nl,
+      'variable WNDB to point at the directory holding the WordNet files'-[]
+    ].
