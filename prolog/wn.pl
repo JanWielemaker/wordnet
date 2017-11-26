@@ -85,7 +85,8 @@ Some more remarks:
    3XXXXXXXX
 
 @author Originally by Jan Wielemaker.  Partly documented by an
-unknown author.
+unknown author.  Current commens copied from prologdb.5WN.html
+file from the sources.
 @see Wordnet is a lexical database for the English language. See
 http://www.cogsci.princeton.edu/~wn/
 */
@@ -98,16 +99,16 @@ http://www.cogsci.princeton.edu/~wn/
 :- multifile user:file_search_path/2.
 
 user:file_search_path(wndb, WNDB) :-
-	(   getenv('WNDB', WNDB)
-	->  true
-	;   current_prolog_flag(windows, true)
-	->  WNDB = 'C:\\Program Files\\WordNet\\2.0'
-	;   WNDB = '/usr/local/WordNet-3.0'
-	).
+    (   getenv('WNDB', WNDB)
+    ->  true
+    ;   current_prolog_flag(windows, true)
+    ->  WNDB = 'C:\\Program Files\\WordNet\\2.0'
+    ;   WNDB = '/usr/local/WordNet-3.0'
+    ).
 
-%!	wn_op(PredSpec) is nondet.
+%!  wn_op(PredSpec) is nondet.
 %
-%	Definition of wordnet operator types.
+%   Definition of wordnet operator types.
 
 wn_op(ant(synset_id, w_num, synset_id, w_num)).
 wn_op(at(synset_id, synset_id)).
@@ -138,111 +139,192 @@ wn_op(vgp(synset_id, w_num, synset_id, w_num)).
 
 %!  wn_ant(?Antonym1, ?Wnum1, ?Antonym2, ?WNum2) is nondet.
 %
-%   Antonyms: synsets with opposite meanings.
+%   The ant operator specifies antonymous  word   s.  This  is a lexical
+%   relation  that  holds  for  all    syntactic  categories.  For  each
+%   antonymous pair, both relations are listed (ie. each synset_id,w_num
+%   pair is both a source and target word.)
 
 wn_ant(Antonym1, Wnum1, Antonym2, WNum2) :- ant(Antonym1, Wnum1, Antonym2, WNum2).
 
 %!  wn_at(?Noun, ?Adjective) is nondet.
 %
-%   Attribute relation: adjective pertains  to   concept  represented by
-%   noun.
+%   The at operator defines the  attribute   relation  between  noun and
+%   adjective synset pairs in which the  adjective   is  a  value of the
+%   noun. For each pair, both relations   are listed (ie. each synset_id
+%   is both a source and target).
 
 wn_at(Noun, Adjective) :- at(Noun, Adjective).
 
-%!  wn_cls(?Syn?Set, ?W1, ?Class, ?W2, ?ClassType) is nondet.
+%!  wn_cls(?SynSet, ?W1, ?Class, ?W2, ?ClassType) is nondet.
+%
+%   The cls operator specifies that the first synset has been classified
+%   as a member of the class represented by the second synset. Either of
+%   the w_num's can be 0, reflecting that the pointer is semantic in the
+%   original WordNet database.
 
-wn_cls(SynSet, W1, Class, W2, ClassType) :- cls(SynSet, W1, Class, W2, ClassType).
+wn_cls(SynSet, W1, Class, W2, ClassType) :-
+    cls(SynSet, W1, Class, W2, ClassType).
 
 %!  wn_cs(?SynSet, ?Causes) is nondet.
 %
 %   First kind of event is caused by second.
+%
+%   The cs operator specifies that the second   synset is a cause of the
+%   first synset. This relation only holds for verbs.
 
-wn_cs(SynSet, Causes) :- cs(SynSet, Causes).
+wn_cs(SynSet, Causes) :-
+    cs(SynSet, Causes).
 
 %!  wn_der(?SynSet1, ?W1, ?SynSet2, ?W2) is nondet.
+%
+%   The der operator specifies that  there   exists  a reflexive lexical
+%   morphosemantic relation between the first   and  second synset terms
+%   representing derivational morphology.
 
-wn_der(SynSet1, W1, SynSet2, W2) :- der(SynSet1, W1, SynSet2, W2).
+wn_der(SynSet1, W1, SynSet2, W2) :-
+    der(SynSet1, W1, SynSet2, W2).
 
 %!  wn_ent(?SynSet, ?Entailment) is nondet.
 %
-%   First kind of event entails occurrence of second.
+%   The ent operator specifies that the   second synset is an entailment
+%   of first synset. This relation only holds for verbs.
 
-wn_ent(SynSet, Entailment) :- ent(SynSet, Entailment).
+wn_ent(SynSet, Entailment) :-
+    ent(SynSet, Entailment).
 
 %!  wn_fr(?Synset, ?Wnum, ?Fnum) is nondet.
+%
+%   fr operator specifies a generic sentence frame  for one or all words
+%   in a synset. The operator is defined only for verbs.
 
-wn_fr(Synset, Wnum, Fnum) :- fr(Synset, Wnum, Fnum).
+wn_fr(Synset, Wnum, Fnum) :-
+    fr(Synset, Wnum, Fnum).
 
 %!  wn_g(?SynSet, ?Gloss) is nondet.
+%
+%   The g operator specifies the gloss for a synset.
 
-wn_g(SynSet, Gloss) :- g(SynSet, Gloss).
+wn_g(SynSet, Gloss) :-
+    g(SynSet, Gloss).
 
 %!  wn_hyp(?Hyponym, ?HyperNym) is nondet.
 %
-%   Subclass-superclass relation between pairs of nouns or verbs
+%   The hyp operator specifies that the second   synset is a hypernym of
+%   the first synset. This  relation  holds   for  nouns  and verbs. The
+%   reflexive operator, hyponym, implies that  the   first  synset  is a
+%   hyponym of the second synset.
 
-wn_hyp(Hyponym, HyperNym) :- hyp(Hyponym, HyperNym).
+wn_hyp(Hyponym, HyperNym) :-
+    hyp(Hyponym, HyperNym).
 
 %!  wn_ins(?A,?B) is nondet.
+%
+%   The ins operator specifies that the first   synset is an instance of
+%   the second synset. This relation  holds   for  nouns.  The reflexive
+%   operator,  has_instance,  implies  that  the  second  synset  is  an
+%   instance of the first synset.
 
 wn_ins(A,B) :- ins(A,B).
 
 %!  wn_mm(?SynSet, ?MemberMeronym) is nondet.
 %
-%   First kind of object is a member of second
+%   The mm operator specifies that the second synset is a member meronym
+%   of the first  synset.  This  relation   only  holds  for  nouns. The
+%   reflexive operator, member holonym, can be implied.
 
-wn_mm(SynSet, MemberMeronym) :- mm(SynSet, MemberMeronym).
+wn_mm(SynSet, MemberMeronym) :-
+    mm(SynSet, MemberMeronym).
 
 %!  wn_mp(?SynSet, ?PartMeronym) is nondet.
 %
-%   First kind of object is a part of second
+%   The mp opeQrator specifies that the second synset is a part meronym
+%   of the first synset. This relation only holds for nouns. The
+%   reflexive operator, part holonym, can be implied.
 
-wn_mp(SynSet, PartMeronym) :- ms(SynSet, PartMeronym).
+wn_mp(SynSet, PartMeronym) :-
+    ms(SynSet, PartMeronym).
 
 %!  wn_ms(?SynSet, ?SubstanceMeronym) is nondet.
 %
-%   First substance is part of second.
+%   The ms operator specifies that  the   second  synset  is a substance
+%   meronym of the first synset. This relation only holds for nouns. The
+%   reflexive operator, substance holonym, can be implied.
 
-wn_ms(SynSet, SubstanceMeronym) :- ms(SynSet, SubstanceMeronym).
+wn_ms(SynSet, SubstanceMeronym) :-
+    ms(SynSet, SubstanceMeronym).
 
 %!  wn_per(?Synset1, ?WNum1, ?Synset2, ?WNum2) is nondet.
+%
+%   The per operator specifies two  different   relations  based  on the
+%   parts of speech involved. If  the  first   word  is  in an adjective
+%   synset, that word pertains to either   the  noun or adjective second
+%   word. If the first word is in an adverb synset, that word is derived
+%   from the adjective second word.
 
-wn_per(Synset1, WNum1, Synset2, WNum2) :- per(Synset1, WNum1, Synset2, WNum2).
+wn_per(Synset1, WNum1, Synset2, WNum2) :-
+    per(Synset1, WNum1, Synset2, WNum2).
 
 %!  wn_ppl(?Synset1, ?WNum1, ?Synset2, ?WNum2) is nondet.
 %
-%   Relation between adjectival form and a verb.
+%   ppl operator specifies that the adjective first word is a participle
+%   of the verb second word. The reflexive operator can be implied.
 
-wn_ppl(Synset1, WNum1, Synset2, WNum2) :- ppl(Synset1, WNum1, Synset2, WNum2).
+wn_ppl(Synset1, WNum1, Synset2, WNum2) :-
+    ppl(Synset1, WNum1, Synset2, WNum2).
 
 %!  wn_s(?SynSet, ?WNum, ?Word, ?SynSetType, ?Sense, ?Tag) is nondet.
+%
+%   A s operator is present for every word sense in WordNet. In wn_s.pl,
+%   w_num specifies the word number for word in the synset.
 
-wn_s(SynSet, WNum, Word, SynSetType, Sense, Tag) :- s(SynSet, WNum, Word, SynSetType, Sense, Tag).
+wn_s(SynSet, WNum, Word, SynSetType, Sense, Tag) :-
+    s(SynSet, WNum, Word, SynSetType, Sense, Tag).
 
 %!  wn_sa(?Synset1, ?WNum1, ?Synset2, ?WNum2) is nondet.
 %
-%   Relation between a single word verb its phrasal verb variant with a
-%   similar meanings.
+%   The sa operator specifies  that   additional  information  about the
+%   first word can be obtained by seeing  the second word. This operator
+%   is only defined for verbs  and   adjectives.  There  is no reflexive
+%   relation (ie. it cannot be inferred  that the additional information
+%   about the second word can be obtained from the first word).
 
-wn_sa(Synset1, WNum1, Synset2, WNum2) :- sa(Synset1, WNum1, Synset2, WNum2).
+wn_sa(Synset1, WNum1, Synset2, WNum2) :-
+    sa(Synset1, WNum1, Synset2, WNum2).
 
 %!  wn_sim(?SynSet, ?Similar) is nondet.
 %
-%   Similar adjectives.
+%   The sim operator specifies that  the   second  synset  is similar in
+%   meaning to the first synset. This means  that the second synset is a
+%   satellite the first synset, which is the cluster head. This relation
+%   only holds for adjective synsets contained in adjective clusters.
 
-wn_sim(SynSet, Similar) :- sim(SynSet, Similar).
+wn_sim(SynSet, Similar) :-
+    sim(SynSet, Similar).
 
 %!  wn_sk(?A,?B,?C) is nondet.
+%
+%   A sk operator is present for every word sense in WordNet. This gives
+%   the WordNet sense key for each word sense.
 
-wn_sk(A,B,C) :- sk(A,B,C).
+wn_sk(A,B,C) :-
+    sk(A,B,C).
 
 %!  wn_syntax(?A,?B,?C) is nondet.
+%
+%   The syntax operator specifies the syntactic  marker for a given word
+%   sense if one is specified.
 
-wn_syntax(A,B,C) :- syntax(A,B,C).
+wn_syntax(A,B,C) :-
+    syntax(A,B,C).
 
 %!  wn_vgp(?Verb, ?W1, ?Similar, ?W2) is nondet.
+%
+%   vgp operator specifies verb synsets that  are similar in meaning and
+%   should be grouped together when displayed   in response to a grouped
+%   synset search.
 
-wn_vgp(Verb, W1, Similar, W2) :- vgp(Verb, W1, Similar, W2).
+wn_vgp(Verb, W1, Similar, W2) :-
+    vgp(Verb, W1, Similar, W2).
 
 
 		 /*******************************
