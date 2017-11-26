@@ -99,9 +99,7 @@ http://www.cogsci.princeton.edu/~wn/
 :- multifile user:file_search_path/2.
 
 user:file_search_path(wndb, WNDB) :-
-    (   haswndb
-    ->  true
-    ;   getenv('WNDB', WNDB)
+    (   getenv('WNDB', WNDB)
     ->  true
     ;   current_prolog_flag(windows, true)
     ->  WNDB = 'C:\\Program Files\\WordNet\\3.0'
