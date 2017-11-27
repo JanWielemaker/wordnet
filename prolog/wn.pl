@@ -84,11 +84,11 @@ Some more remarks:
    both adjective and adjective_satellite are represented as
    3XXXXXXXX
 
-@author Originally by Jan Wielemaker.  Partly documented by an
-unknown author.  Current commens copied from prologdb.5WN.html
-file from the sources.
-@see Wordnet is a lexical database for the English language. See
-http://www.cogsci.princeton.edu/~wn/
+@author Originally by Jan Wielemaker. Partly documented by Samer
+Abdallah. Current comments copied from prologdb.5WN.html file from the
+sources.
+@see Wordnet is a lexical database for the English language.
+See http://www.cogsci.princeton.edu/~wn/
 */
 
 
