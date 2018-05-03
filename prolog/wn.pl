@@ -389,22 +389,9 @@ load_wordnet :-
 
 load_op(Name) :-
 	atom_concat('wn_', Name, File),
-	absolute_file_name(wndb(File),
-			   [ access(read),
-			     file_type(prolog)
-			   ],
-			   PlFile),
-	file_name_extension(Base, _Ext, PlFile),
-	file_name_extension(Base, qlf, QlfFile),
-	(   exists_file(QlfFile),
-	    time_file(QlfFile, QlfTime),
-	    time_file(PlFile, PlTime),
-	    QlfTime >= PlTime
-	->  load_files(QlfFile)
-	;   access_file(QlfFile, write)
-	->  qcompile(PlFile)
-	;   load_files(PlFile)
-	).
+        load_files(wndb(File),
+                   [ qcompile(auto)
+                   ]).
 
 
 		 /*******************************
